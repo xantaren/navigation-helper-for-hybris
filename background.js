@@ -59,7 +59,10 @@ function isDomainMatch(url, domain) {
   const { domain_name, possible_paths } = domain;
   if (url.hostname !== domain_name) return false;
   if (!possible_paths || possible_paths.length === 0) return true;
-  return possible_paths.some((path) => url.pathname.includes(`/${path}`));
+  return possible_paths.some((path) => {
+    const pathSegments = url.pathname.split("/").filter(Boolean);
+    return pathSegments[0] === path;
+  });
 }
 
 function detectHybrisPage(url) {
@@ -146,12 +149,16 @@ function createContextMenu(options, tabId) {
     });
 
     options.forEach((option) => {
-      chrome.contextMenus.create({
-        id: `${option.title}_${tabId}`,
-        parentId: `gotoMenu_${tabId}`,
-        title: option.title,
-        contexts: ["all"],
-      });
+      try {
+        chrome.contextMenus.create({
+          id: `${option.title}_${tabId}`,
+          parentId: `gotoMenu_${tabId}`,
+          title: option.title,
+          contexts: ["all"],
+        });
+      } catch (error) {
+        console.log("Error creating context menu item:", error);
+      }
     });
   }
 }
